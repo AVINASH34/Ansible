@@ -1,0 +1,21 @@
+---
+- name: installing php with apache
+  hosts: all
+  become: yes
+  tasks:
+   - name: update and installing 
+     ansible.builtin.apt:
+         update_cache: yes
+         pkg:
+          - apache2
+          - php
+          - libapache2-mod-php
+         state: present
+   - name: file moddification
+     ansible.builtin.copy:
+         src: /home/avinash/info.php
+         dest: /var/www/html/info.php
+   - name: service restart
+     ansible.builtin.service:
+        name: apache2
+        state: restarted      

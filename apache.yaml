@@ -1,0 +1,14 @@
+---
+- name: updating the packages
+  hosts: all
+  become: yes
+  tasks:
+    - name: update ubuntu packages
+      ansible.builtin.apt:
+         name: apache2
+         update_cache: yes
+         state: present
+    - name: copy the file to dest
+      ansible.builtin.copy:
+        src: /home/avinash/avinash.html
+        dest: /var/www/html/info.html

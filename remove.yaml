@@ -1,0 +1,9 @@
+---
+- name: Remove all packages
+  hosts: all
+  become: yes
+  tasks:
+    - name: Remove all packages
+      apt:
+        name: '*'
+        state: absent

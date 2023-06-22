@@ -1,0 +1,9 @@
+--- 
+- name: creating a simple file
+  hosts: all
+  become: no 
+  tasks:
+   - name: file creation
+     ansible.builtin.file:
+       path: /tmp/avinash.txt
+       state: touch

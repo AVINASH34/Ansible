@@ -1,0 +1,82 @@
+--- 
+  - name: tomcat installation
+    hosts: all 
+    become: yes 
+    vars:
+       java_ver: openjdk-11-jdk
+       user_name: tomcat
+       user_home: /opt/tomcat
+       user_shell: /bin/false
+       tomcat_download_url: https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.76/bin/apache-tomcat-9.0.76.tar.gz
+       tomcat_download_url_dest: /tmp/apache-tomcat-9.0.76.tar.gz
+       tomcat_symblink_src: /opt/tomcat/apache-tomcat-9.0.76
+       tomcat_symblink_dest: /opt/tomcat/latest
+       tomcat_shell_files: /opt/tomcat/latest/bin/*.sh
+       tomcat_user_conf_location: /opt/tomcat/latest/conf/tomcat-users.xml
+       tomcat_manager_conf_location: /opt/tomcat/latest/webapps/manager/META-INF/context.xml
+       tomcat_host_manager_conf_location: /opt/tomcat/latest/webapps/host-manager/META-INF/context.xml
+    tasks:
+      - name: installing java
+        ansible.builtin.apt:
+          name: "{{ java_ver  }}"
+          update_cache: yes
+          state: present
+      - name: creating user
+        ansible.builtin.user:
+          name: "{{ user_name }}"
+          home: "{{ user_home }}"
+          shell: "{{ user_shell }}"
+      - name: download tomcat 
+        ansible.builtin.get_url:
+           url: "{{ tomcat_download_url }}"
+           dest: "{{ tomcat_download_url_dest }}"
+      - name: extract tar file 
+        ansible.builtin.unarchive:
+            src: "{{ tomcat_download_url_dest  }}"
+            dest: "{{ user_home }}"
+            remote_src: yes
+      - name: Create a symbolic link
+        ansible.builtin.file:
+           src: "{{ tomcat_symblink_src }}"
+           dest: "{{ tomcat_symblink_dest }}"
+           owner: "{{ user_name }}"
+           group: "{{ user_name }}"
+           state: link 
+      - name: Recursively change ownership of a directory
+        ansible.builtin.file:
+           path: "{{ user_home }}"
+           state: directory
+           recurse: yes
+           owner: "{{ user_name }}"
+           group: "{{ user_name }}"
+      - name: Give Execute permissions to shell files in tomcat's bin directory
+        ansible.builtin.file:
+           path: "{{ item }}"
+           mode: "+x"
+        with_fileglob:
+           - "{{ tomcat_shell_files }}"
+      - name: reload daemon
+        ansible.builtin.systemd:
+           name: tomcat
+           daemon_reload: yes
+           enabled: yes
+           state: started
+      - name: Copy file tomcat user file
+        ansible.builtin.copy:
+           src: tomcat-users.xml
+           dest: "{{ tomcat_user_conf_location }}"
+           remote_src: yes
+      - name: Copy file manager context file
+        ansible.builtin.copy:
+           src: manager-context.xml
+           dest: "{{ tomcat_manager_conf_location }}"
+           remote_src: yes
+      - name: Copy file tomcat user file
+        ansible.builtin.copy:
+           src: hostmanager-context.xml
+           dest: "{{ tomcat_host_manager_conf_location }}"
+           remote_src: yes
+      - name: restart tomcat
+        ansible.builtin.systemd:
+           name: tomcat
+           state: restarted

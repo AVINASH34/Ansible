@@ -1,0 +1,15 @@
+--- 
+ - name: using variable for creating loops 
+   hosts: all 
+   become: yes 
+   vars:
+     files:
+        - /tmp/avi4.txt
+        - /tmp/avi5.txt
+        - /tmp/avi6.txt   
+   tasks: 
+    - name: creating files 
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: touch
+      loop: "{{ files }}"

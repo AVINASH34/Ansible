@@ -1,0 +1,13 @@
+--- 
+- name: loops in ansible
+  hosts: all 
+  become: yes 
+  tasks:
+   - name: crating files
+     ansible.builtin.file:
+        path: "{{ item }}"
+        state: touch
+     loop:
+       - /tmp/avi1.txt
+       - /tmp/avi2.txt
+       - /tmp/avi3.txt
